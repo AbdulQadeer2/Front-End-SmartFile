@@ -1243,7 +1243,7 @@ const Home = () => {
             </div>
           </div>
           <div
-            className="tab-content p-0 bg-transparent border-0 border bg-light"
+            className="tab-content p-0 bg-transparent border-0 bg-light"
             id="nav-tabContent"
           >
             <div
