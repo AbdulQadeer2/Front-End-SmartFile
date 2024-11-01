@@ -164,6 +164,31 @@
 }
 
 /**
+ * Scrollbar
+ */
+::-webkit-scrollbar {
+  width: 7px;
+  background-color: var(--color-primary-alt);
+}
+
+::-webkit-scrollbar-button:start:decrement,
+::-webkit-scrollbar-button:end:increment {
+  display: none;
+}
+
+::-webkit-scrollbar-track-piece {
+  -webkit-box-shadow: inset 0 0 6px var(--color-primary-alt);
+  background-color: var(--color-primary-alt);
+}
+
+::-webkit-scrollbar-thumb:vertical {
+  border-radius: 5px;
+  -webkit-box-shadow: inset 0 0 10px var(--color-primary);
+  background-image: var(--color-primary);
+}
+
+
+/**
  * Reset Styels
  */
 * {
@@ -10170,6 +10195,7 @@ textarea:-ms-input-placeholder {
 ::selection {
   background-color: var(--color-primary);
   color: var(--color-white);
+  text-shadow: none;
 }
 
 /* ========= Forms Styles ========= */
@@ -22462,7 +22488,12 @@ only screen and (min-width: 768px) and (max-width: 991px) {
   transition: all 0.8s;
 }
 
-.drop-icon:hover {
+.drop-area:hover .drop-icon {
+  transform: translateX(8px) translateY(-8px);
+  box-shadow: -9px 5px 9px #00000078;
+}
+
+#left-drop-zone:hover .drop-icon {
   transform: translateX(8px) translateY(-8px);
   box-shadow: -9px 5px 9px #00000078;
 }
@@ -22489,7 +22520,8 @@ only screen and (min-width: 768px) and (max-width: 991px) {
 
 .file-title {
   font-weight: 400;
-  //font-size: 18px;
+  font-size: 14px;
+  text-align: left;
   text-transform: capitalize;
 }
 
@@ -22516,13 +22548,25 @@ only screen and (min-width: 768px) and (max-width: 991px) {
 .file-date {
   font-size: 12px;
   color: #767676;
-} 
-
-.upload-file-and-tab .left-area .file-list {
-  max-height: 200px; /* Set maximum height for the file list */
-  overflow-y: auto;  /* Enable vertical scrolling */
-  border-radius: 6px; /* Match with your item border radius */
 }
+
+.left-area .file-list {
+  margin-top: 6px;
+  max-height: 282px;
+  overflow-y: auto;
+  border-radius: 6px;
+}
+
+.left-area .file-list::-webkit-scrollbar {
+  width: 6px;
+  border-radius: 5px;
+}
+
+.left-area .file-list::-webkit-scrollbar-track-piece {
+  border-radius: 5px;
+}
+
+
 
 
 /* right area */
@@ -25887,5 +25931,4 @@ body.active-light-mode .slider-area.bg-transparent .inner button.btn-default.btn
   }
 }
 
-/*# sourceMappingURL=style.css.map */
-
+/*# sourceMappingURL=../maps/style.css.map */
