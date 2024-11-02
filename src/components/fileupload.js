@@ -45,15 +45,41 @@ const FileUpload = () => {
 
   const handleFiles = (files) => {
     const filesArray = Array.from(files).map((file) => ({
+      id: `${file.name}-${file.size}-${Date.now()}`, // Unique ID for each file
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2),
       type: file.type || "Unknown",
+      progress: 0, // Initial progress set to 0
     }));
     setUploadedFiles((prevFiles) => [...prevFiles, ...filesArray]);
+
+    // Simulate file upload progress for each new file by its unique ID
+    filesArray.forEach((file) => simulateUploadProgress(file.id));
+  };
+
+  // Function to simulate upload progress
+  const simulateUploadProgress = (fileId) => {
+    const interval = setInterval(() => {
+      setUploadedFiles((prevFiles) => {
+        const updatedFiles = prevFiles.map((file) => {
+          if (file.id === fileId) {
+            if (file.progress < 100) {
+              return { ...file, progress: file.progress + 10 };
+            } else {
+              clearInterval(interval); // Stop interval when progress is 100%
+            }
+          }
+          return file;
+        });
+        return updatedFiles;
+      });
+    }, 500); // Adjust the interval speed as desired
   };
 
   const deleteFile = (fileIndex) => {
-    setUploadedFiles((prevFiles) => prevFiles.filter((_, index) => index !== fileIndex));
+    setUploadedFiles((prevFiles) =>
+      prevFiles.filter((_, index) => index !== fileIndex)
+    );
   };
 
   return (
@@ -73,31 +99,52 @@ const FileUpload = () => {
           <div className="upload-file-and-tab">
             <div className="left-area" id="left-drop-area">
               <div id="left-drop-zone" onClick={openFileDialog}>
-                <h3 className="drop-title">Upload more files</h3>
-                <p className="drop-text">
-                  Drag or drop your files here or click to upload
-                </p>
+                <div className="drop-content">
+                  <h3 className="drop-title">Upload more files</h3>
+                  <p className="drop-text">
+                    Drag or drop your files here or click to upload
+                  </p>
+                </div>
                 <div className="drop-icon">
                   <i className="fa-light fa-upload"></i>
                 </div>
               </div>
               <div className="file-list">
                 {uploadedFiles.map((file, index) => (
-                  <div className="file-item" key={index}>
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span className="file-title">{file.name}</span>
-                      <span
-                        className="delete-icon delete-file-btn"
-                        data-index={index}
-                        onClick={() => deleteFile(index)}
-                      >
-                        <i className="fa-solid fa-trash-can"></i>
-                      </span>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between mt-4">
-                      <span class="file-type">{file.type}</span>
-                      <span class="file-size">{file.size} MB</span>
-                    </div>
+                  <div className="file-item" key={file.id}>
+                    {file.progress < 100 ? (
+                      <div className="d-flex flex-column align-items-start">
+                        <span className="file-title">{file.name}</span>
+                        <div className="progress progress-light-bg w-100 my-2">
+                          <div
+                            className="progress-bar "
+                            role="progressbar"
+                            style={{ width: `${file.progress}%` }}
+                            aria-valuenow={file.progress}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          >
+                            {file.progress}%
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="d-flex align-items-center justify-content-between">
+                          <span className="file-title">{file.name}</span>
+                          <span
+                            className="delete-icon delete-file-btn"
+                            onClick={() => deleteFile(index)}
+                          >
+                            <i className="fa-solid fa-trash-can"></i>
+                          </span>
+                        </div>
+                        <div className="d-flex align-items-center justify-content-between mt-4">
+                          <span className="file-type">{file.type}</span>
+                          <span className="file-size">{file.size} MB</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
