@@ -144,7 +144,7 @@ const FileUpload = () => {
                             <i className="fa-solid fa-trash-can"></i>
                           </span>
                         </div>
-                        <div className="d-flex align-items-center justify-content-between mt-4">
+                        <div className="d-flex align-items-center justify-content-between mt-4 gap-3">
                           <span className="file-type">{file.type}</span>
                           <span className="file-size">{file.size} MB</span>
                         </div>

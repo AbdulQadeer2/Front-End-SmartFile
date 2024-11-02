@@ -22928,7 +22928,7 @@ iframe {
 
 .left-area .file-list {
   margin-top: 6px;
-  max-height: 282px;
+  max-height: 242px;
   overflow-y: auto;
   border-radius: 6px;
 }
@@ -26661,6 +26661,27 @@ body.active-light-mode
   .column-reverse {
     flex-direction: column-reverse;
   }
+}
+
+/* CopyLink Thank-you Page */
+.copyfilelink-btn {
+ padding: 0px !important;
+}
+
+@media only screen and (max-width: 576px) {
+  .copy-link {
+    flex-direction: column;
+  }
+  .copy-link > div {
+    width: 100%;
+  }
+  .copy-link div {
+    width: 100% !important;
+    margin-bottom: 10px !important;
+}
+.copy-link div a {
+  margin-left: 0px !important;
+}
 }
 
 /*# sourceMappingURL=../maps/style.css.map */
