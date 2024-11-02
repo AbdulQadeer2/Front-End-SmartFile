@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 const FileUpload = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [totalSize, setTotalSize] = useState(0);
 
   useEffect(() => {
     const dropArea = document.getElementById("drop-area");
@@ -17,6 +18,11 @@ const FileUpload = () => {
       dropArea.removeEventListener("drop", handleDrop);
     };
   }, []);
+
+  useEffect(() => {
+    const size = uploadedFiles.reduce((acc, file) => acc + parseFloat(file.size), 0);
+    setTotalSize(size.toFixed(2));
+  }, [uploadedFiles]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -45,19 +51,17 @@ const FileUpload = () => {
 
   const handleFiles = (files) => {
     const filesArray = Array.from(files).map((file) => ({
-      id: `${file.name}-${file.size}-${Date.now()}`, // Unique ID for each file
+      id: `${file.name}-${file.size}-${Date.now()}`,
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2),
       type: file.type || "Unknown",
-      progress: 0, // Initial progress set to 0
+      progress: 0,
     }));
     setUploadedFiles((prevFiles) => [...prevFiles, ...filesArray]);
 
-    // Simulate file upload progress for each new file by its unique ID
     filesArray.forEach((file) => simulateUploadProgress(file.id));
   };
 
-  // Function to simulate upload progress
   const simulateUploadProgress = (fileId) => {
     const interval = setInterval(() => {
       setUploadedFiles((prevFiles) => {
@@ -117,7 +121,7 @@ const FileUpload = () => {
                         <span className="file-title">{file.name}</span>
                         <div className="progress progress-light-bg w-100 my-2">
                           <div
-                            className="progress-bar "
+                            className="progress-bar"
                             role="progressbar"
                             style={{ width: `${file.progress}%` }}
                             aria-valuenow={file.progress}
@@ -147,6 +151,9 @@ const FileUpload = () => {
                     )}
                   </div>
                 ))}
+              </div>
+              <div className="total-size mt-4">
+                <strong>Total Size:</strong> {totalSize} MB
               </div>
             </div>
             <div className="right-area" id="right-area">
