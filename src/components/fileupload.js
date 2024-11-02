@@ -5,6 +5,12 @@ const FileUpload = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [totalSize, setTotalSize] = useState(0);
 
+  // Calculate total size in MB whenever `uploadedFiles` changes
+  useEffect(() => {
+    const size = uploadedFiles.reduce((acc, file) => acc + (file.progress === 100 ? parseFloat(file.size) : 0), 0);
+    setTotalSize(size.toFixed(2)); // Limit to 2 decimal places
+  }, [uploadedFiles]);
+
   useEffect(() => {
     const dropArea = document.getElementById("drop-area");
 
@@ -18,11 +24,6 @@ const FileUpload = () => {
       dropArea.removeEventListener("drop", handleDrop);
     };
   }, []);
-
-  useEffect(() => {
-    const size = uploadedFiles.reduce((acc, file) => acc + parseFloat(file.size), 0);
-    setTotalSize(size.toFixed(2));
-  }, [uploadedFiles]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -51,14 +52,15 @@ const FileUpload = () => {
 
   const handleFiles = (files) => {
     const filesArray = Array.from(files).map((file) => ({
-      id: `${file.name}-${file.size}-${Date.now()}`,
+      id: `${file.name}-${file.size}-${Date.now()}`, // Unique ID for each file
       name: file.name,
-      size: (file.size / (1024 * 1024)).toFixed(2),
+      size: (file.size / (1024 * 1024)).toFixed(2), // File size in MB with 2 decimal places
       type: file.type || "Unknown",
-      progress: 0,
+      progress: 0, // Initial progress set to 0
     }));
     setUploadedFiles((prevFiles) => [...prevFiles, ...filesArray]);
 
+    // Simulate file upload progress for each new file by its unique ID
     filesArray.forEach((file) => simulateUploadProgress(file.id));
   };
 
@@ -71,6 +73,7 @@ const FileUpload = () => {
               return { ...file, progress: file.progress + 10 };
             } else {
               clearInterval(interval); // Stop interval when progress is 100%
+              return { ...file, progress: 100 };
             }
           }
           return file;
@@ -81,9 +84,7 @@ const FileUpload = () => {
   };
 
   const deleteFile = (fileIndex) => {
-    setUploadedFiles((prevFiles) =>
-      prevFiles.filter((_, index) => index !== fileIndex)
-    );
+    setUploadedFiles((prevFiles) => prevFiles.filter((_, index) => index !== fileIndex));
   };
 
   return (
@@ -152,6 +153,7 @@ const FileUpload = () => {
                   </div>
                 ))}
               </div>
+              {/* Display total size here */}
               <div className="total-size mt-4">
                 <strong>Total Size:</strong> {totalSize} MB
               </div>
