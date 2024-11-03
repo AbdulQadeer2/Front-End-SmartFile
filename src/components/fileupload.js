@@ -181,48 +181,47 @@ const FileUpload = () => {
 
   const handleFiles = (files) => {
     const filesArray = Array.from(files).map((file) => ({
-      file, // Store the actual file object for upload
+      id: `${file.name}-${file.size}-${Date.now()}`, // Unique ID for each file
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2),
+      type: file.type || "Unknown",
+      progress: 0, // Initial progress set to 0
     }));
     setUploadedFiles((prevFiles) => [...prevFiles, ...filesArray]);
+
+    // Simulate file upload progress for each new file by its unique ID
+    filesArray.forEach((file) => simulateUploadProgress(file.id));
   };
 
-  const uploadFiles = async () => {
-    const formData = new FormData();
-    
-    // Append each file to the FormData object
-    uploadedFiles.forEach((file) => {
-      formData.append("Files", file.file); // "Files" must match the property name in UploadFilesRequest
-    });
-
-    // Append optional email and password
-    formData.append("Email", email);
-    formData.append("Password", password);
-
-    try {
-      const response = await fetch("https://localhost:7269/api/QuickShare/upload", {
-        method: "POST",
-        body: formData,
+  // Function to simulate upload progress
+  const simulateUploadProgress = (fileId) => {
+    const interval = setInterval(() => {
+      setUploadedFiles((prevFiles) => {
+        const updatedFiles = prevFiles.map((file) => {
+          if (file.id === fileId) {
+            if (file.progress < 100) {
+              return { ...file, progress: file.progress + 10 };
+            } else {
+              clearInterval(interval); // Stop interval when progress is 100%
+            }
+          }
+          return file;
+        });
+        return updatedFiles;
       });
+    }, 500); // Adjust the interval speed as desired
+  };
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to upload files.");
-      }
-
-      const data = await response.json();
-      console.log("Upload successful:", data);
-      // Handle successful upload, e.g., show share link
-    } catch (error) {
-      console.error("Error uploading files:", error);
-    }
+  const deleteFile = (fileIndex) => {
+    setUploadedFiles((prevFiles) =>
+      prevFiles.filter((_, index) => index !== fileIndex)
+    );
   };
 
   return (
     <>
       {!uploadedFiles.length ? (
-        <div id="drop-area" onClick={openFileDialog}>
+        <div className="drop-area" id="drop-area" onClick={openFileDialog}>
           <h3 className="drop-title">Upload file</h3>
           <p className="drop-text">
             Drag or drop your files here or click to upload
@@ -232,73 +231,137 @@ const FileUpload = () => {
           </div>
         </div>
       ) : (
-        <div className="upload-file-and-tab">
-          <div className="left-area" id="drop-area">
-            <div id="left-drop-zone" onClick={openFileDialog}>
-              <h3 className="drop-title">Upload more files</h3>
-              <p className="drop-text">Drag or drop your files here or click to upload</p>
-              <div className="drop-icon">
-                <i className="fa-light fa-upload"></i>
-              </div>
-            </div>
-            <div className="file-list">
-              {uploadedFiles.map((file, index) => (
-                <div className="file-item" key={index}>
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span className="file-title">{file.name}</span>
-                    <span className="file-size">{file.size} MB</span>
-                  </div>
+        <div id="drop-area">
+          <div className="upload-file-and-tab">
+            <div className="left-area" id="left-drop-area">
+              <div id="left-drop-zone" onClick={openFileDialog}>
+                <div className="drop-content">
+                  <h3 className="drop-title">Upload more files</h3>
+                  <p className="drop-text">
+                    Drag or drop your files here or click to upload
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-          <div className="right-area" id="right-area">
-            <div className="tabs">
-              <ul className="nav nav-tabs">
-                <li className="nav-item">
-                  <a className="nav-link active" id="get-link-tab" data-bs-toggle="tab" data-bs-target="#get-link-content" role="tab">
-                    Get Link
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a className="nav-link" id="send-file-tab" data-bs-toggle="tab" data-bs-target="#send-file-content" role="tab">
-                    Send File
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="tab-content">
-              <div className="tab-pane fade show active" id="get-link-content" role="tabpanel" aria-labelledby="get-link-tab">
-                <form className="get-link-form" onSubmit={(e) => { e.preventDefault(); uploadFiles(); }}>
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    placeholder="example@email.com"
-                    className="input"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <button type="submit" className="btn-default color-blacked">Get Link</button>
-                </form>
+                <div className="drop-icon">
+                  <i className="fa-light fa-upload"></i>
+                </div>
               </div>
-              <div className="tab-pane fade" id="send-file-content" role="tabpanel" aria-labelledby="send-file-tab">
-                <form className="send-file-form" onSubmit={(e) => { e.preventDefault(); uploadFiles(); }}>
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    placeholder="example@email.com"
-                    className="input"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <label>Recipient Email</label>
-                  <input type="email" placeholder="Recipient Email" className="input" />
-                  <label>Subject</label>
-                  <input type="text" placeholder="Subject" className="input" />
-                  <label>Message</label>
-                  <textarea placeholder="Your Message Here..." className="input"></textarea>
-                  <button type="submit" className="btn-default color-blacked">Send Email</button>
-                </form>
+              <div className="file-list">
+                {uploadedFiles.map((file, index) => (
+                  <div className="file-item" key={file.id}>
+                    {file.progress < 100 ? (
+                      <div className="d-flex flex-column align-items-start">
+                        <span className="file-title">{file.name}</span>
+                        <div className="progress progress-light-bg w-100 my-2">
+                          <div
+                            className="progress-bar "
+                            role="progressbar"
+                            style={{ width: `${file.progress}%` }}
+                            aria-valuenow={file.progress}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          >
+                            {file.progress}%
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="d-flex align-items-center justify-content-between">
+                          <span className="file-title">{file.name}</span>
+                          <span
+                            className="delete-icon delete-file-btn"
+                            onClick={() => deleteFile(index)}
+                          >
+                            <i className="fa-solid fa-trash-can"></i>
+                          </span>
+                        </div>
+                        <div className="d-flex align-items-center justify-content-between mt-4">
+                          <span className="file-type">{file.type}</span>
+                          <span className="file-size">{file.size} MB</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="right-area" id="right-area">
+              <div className="tabs">
+                <ul className="nav nav-tabs">
+                  <li className="nav-item">
+                    <a
+                      className="nav-link active"
+                      id="get-link-tab"
+                      data-bs-toggle="tab"
+                      data-bs-target="#get-link-content"
+                      role="tab"
+                    >
+                      Get Link
+                    </a>
+                  </li>
+                  <li className="nav-item">
+                    <a
+                      className="nav-link"
+                      id="send-file-tab"
+                      data-bs-toggle="tab"
+                      data-bs-target="#send-file-content"
+                      role="tab"
+                    >
+                      Send File
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div className="tab-content">
+                <div
+                  className="tab-pane fade show active"
+                  id="get-link-content"
+                  role="tabpanel"
+                  aria-labelledby="get-link-tab"
+                >
+                  <form className="get-link-form">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      placeholder="example@email.com"
+                      className="input"
+                    />
+                    <a className="btn-default color-blacked">Get Link</a>
+                  </form>
+                </div>
+                <div
+                  className="tab-pane fade"
+                  id="send-file-content"
+                  role="tabpanel"
+                  aria-labelledby="send-file-tab"
+                >
+                  <form className="send-file-form">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      placeholder="example@email.com"
+                      className="input"
+                    />
+                    <label>Recipient Email</label>
+                    <input
+                      type="email"
+                      placeholder="Recipient Email"
+                      className="input"
+                    />
+                    <label>Subject</label>
+                    <input
+                      type="text"
+                      placeholder="Subject"
+                      className="input"
+                    />
+                    <label>Message</label>
+                    <textarea
+                      placeholder="Your Message Here..."
+                      className="input"
+                    ></textarea>
+                    <a className="btn-default color-blacked">Send Email</a>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
