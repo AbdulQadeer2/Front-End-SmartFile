@@ -4,10 +4,9 @@ import Script from "next/script";
 
 const ProgressCircle = () => {
   useEffect(() => {
-    // Wait for jQuery and all dependent plugins to load before initializing
+    // Initialize plugins after jQuery and all dependencies are loaded
     const initPlugins = () => {
       if (window.jQuery) {
-        // Initialize plugins that depend on jQuery
         if (window.WOW) new window.WOW().init();
         if (window.sal) window.sal();
         if (window.jQuery.fn.counterUp) {
@@ -16,7 +15,7 @@ const ProgressCircle = () => {
       }
     };
 
-    // Attach the init function to jQuery's ready event
+    // Check if jQuery is loaded, otherwise wait for the window load event
     window.jQuery ? initPlugins() : window.addEventListener("load", initPlugins);
   }, []);
 
@@ -31,24 +30,28 @@ const ProgressCircle = () => {
         <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" />
       </svg>
 
-      {/* Ensure jQuery loads first */}
+      {/* Core libraries and dependencies */}
       <Script src="/assets/js/vendor/jquery.min.js" strategy="afterInteractive" />
+      <Script src="/assets/js/vendor/bootstrap.min.js" strategy="afterInteractive" />
 
-      {/* Load dependent plugins after jQuery */}
+      {/* Dependent plugins loaded after jQuery */}
+      <Script src="/assets/js/vendor/jquery-one-page-nav.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/waypoint.min.js" strategy="lazyOnload" />
-      <Script src="/assets/js/vendor/modernizr.min.js" strategy="lazyOnload" />
-      <Script src="/assets/js/vendor/bootstrap.min.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/wow.min.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/counterup.min.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/sal.min.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/slick.min.js" strategy="lazyOnload" />
+      <Script src="/assets/js/vendor/bootstrap-select.min.js" strategy="lazyOnload" />
+
+      {/* Additional scripts (low priority) */}
+      <Script src="/assets/js/vendor/modernizr.min.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/text-type.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/prism.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/jquery.style.swicher.js" strategy="lazyOnload" />
-      <Script src="/assets/js/vendor/bootstrap-select.min.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/backto-top.js" strategy="lazyOnload" />
       <Script src="/assets/js/vendor/js.cookie.js" strategy="lazyOnload" />
-      <Script src="/assets/js/vendor/jquery-one-page-nav.js" strategy="lazyOnload" />
+      
+      {/* Main custom script */}
       <Script src="/assets/js/main.js" strategy="lazyOnload" />
     </div>
   );
