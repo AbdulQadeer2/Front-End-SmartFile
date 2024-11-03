@@ -1,81 +1,90 @@
 import React from 'react';
+import Image from 'next/image';
 import FileUpload from '../components/fileupload'
 
 const Home = () => {
   return (
     <main className="page-wrapper">
-        {/*..:: Start Slider Area  ::..*/}
-  <div
-    className="slider-area slider-style-1 variation-default slider-bg-image bg-banner1 slider-bg-shape"
-    data-black-overlay={1}
-  >
-    {/*..:: <div class="bg-blend-top bg_dot-mask"></div> ::..*/}
-    <div className="container">
-      <div className="row justify-content-center">
-        <div className="col-lg-12">
-          <div className="inner text-center mt--140">
-            <h1 className="title display-one">
-              Easy share files with anyone
-              <br />{" "}
-              <span className="header-caption">
-                <span className="cd-headline rotate-1">
-                  <span className="cd-words-wrapper" style={{ width: 221 }}>
-                    <b className="theme-gradient is-visible">Simple</b>
-                    <b className="theme-gradient is-hidden">Secure</b>
-                    <b className="theme-gradient is-hidden">Speedy</b>
-                  </span>
-                </span>
-              </span>{" "}
-              File Sharing
-            </h1>
-            <p className="description">
-              Nexus Filehub: Share files instantly, securely, and effortlessly.
-              Your data, your control.
-            </p>
-            <div className="inner-shape">
-              <img
-                src="assets/images/bg/icon-shape/icon-shape-one.png"
-                alt="Icon Shape"
-                className="iconshape iconshape-one"
-              />
-              <img
-                src="assets/images/bg/icon-shape/icon-shape-two.png"
-                alt="Icon Shape"
-                className="iconshape iconshape-two"
-              />
-              <img
-                src="assets/images/bg/icon-shape/icon-shape-three.png"
-                alt="Icon Shape"
-                className="iconshape iconshape-three"
-              />
-              <img
-                src="assets/images/bg/icon-shape/icon-shape-four.png"
-                alt="Icon Shape"
-                className="iconshape iconshape-four"
-              />
+      {/*..:: Start Slider Area  ::..*/}
+      <div
+        className="slider-area slider-style-1 variation-default slider-bg-image bg-banner1 slider-bg-shape"
+        data-black-overlay={1}
+      >
+        {/*..:: <div class="bg-blend-top bg_dot-mask"></div> ::..*/}
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-lg-12">
+              <div className="inner text-center mt--140">
+                <h1 className="title display-one">
+                  Easy share files with anyone
+                  <br />{" "}
+                  <span className="header-caption">
+                    <span className="cd-headline rotate-1">
+                      <span className="cd-words-wrapper" style={{ width: 221 }}>
+                        <b className="theme-gradient is-visible">Simple</b>
+                        <b className="theme-gradient is-hidden">Secure</b>
+                        <b className="theme-gradient is-hidden">Speedy</b>
+                      </span>
+                    </span>
+                  </span>{" "}
+                  File Sharing
+                </h1>
+                <p className="description">
+                  Nexus Filehub: Share files instantly, securely, and effortlessly.
+                  Your data, your control.
+                </p>
+                <div className="inner-shape">
+                  <Image
+                    src="/assets/images/bg/icon-shape/icon-shape-one.png"
+                    alt="Icon Shape One"
+                    className="iconshape iconshape-one"
+                    width={100}
+                    height={95}
+                  />
+                  <Image
+                    src="/assets/images/bg/icon-shape/icon-shape-two.png"
+                    alt="Icon Shape Two"
+                    className="iconshape iconshape-two"
+                    width={67}
+                    height={67}
+                  />
+                  <Image
+                    src="/assets/images/bg/icon-shape/icon-shape-three.png"
+                    alt="Icon Shape Three"
+                    className="iconshape iconshape-three"
+                    width={70}
+                    height={70}
+                  />
+                  <Image
+                    src="/assets/images/bg/icon-shape/icon-shape-four.png"
+                    alt="Icon Shape Four"
+                    className="iconshape iconshape-four"
+                    width={100}
+                    height={95}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-12 justify-content-center">
+              {/* upload file */}
+              <FileUpload />
             </div>
           </div>
         </div>
-        <div className="col-lg-12 justify-content-center">
-          {/* upload file */}
-          <FileUpload/>
+        <div className="bg-shape">
+          <img
+            className="bg-shape-one"
+            src="assets/images/bg/bg-shape-four.png"
+            alt="Bg Shape"
+          />
+          <img
+            className="bg-shape-two"
+            src="assets/images/bg/bg-shape-five.png"
+            alt="Bg Shape"
+          />
         </div>
       </div>
-    </div>
-    <div className="bg-shape">
-      <img
-        className="bg-shape-one"
-        src="assets/images/bg/bg-shape-four.png"
-        alt="Bg Shape"
-      />
-      <img
-        className="bg-shape-two"
-        src="assets/images/bg/bg-shape-five.png"
-        alt="Bg Shape"
-      />
-    </div>
-  </div>
-  {/*..:: End Slider Area  ::..*/}
+      {/*..:: End Slider Area  ::..*/}
       {/*..:: Start Brand Area ::..*/}
       <div className="rainbow-brand-area rainbow-section-gap">
         <div className="container">
@@ -2236,24 +2245,30 @@ const Home = () => {
                     </div>
                     <div className="app-store-btn">
                       <a className="store-btn" href="#">
-                        <img
-                          src="assets/images/cta-img/play-app.png"
+                        <Image
+                          src="/assets/images/cta-img/play-app.png"
                           alt="Play Store Button"
+                          width={157.29}
+                          height={54.99}
                         />
                       </a>
                       <a className="store-btn" href="#">
-                        <img
-                          src="assets/images/cta-img/apple-app.png"
+                        <Image
+                          src="/assets/images/cta-img/apple-app.png"
                           alt="Apple Store Button"
+                          width={157.29}
+                          height={54.99}
                         />
                       </a>
                     </div>
                   </div>
                   <div className="content-right">
                     <div className="img-right">
-                      <img
-                        src="assets/images/cta-img/view-img.png"
+                      <Image
+                        src="/assets/images/cta-img/view-img.png"
                         alt="Mobile View"
+                        width={450}
+                        height={500}
                       />
                     </div>
                   </div>

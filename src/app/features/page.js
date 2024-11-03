@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 const features = () => {
     return (
@@ -229,24 +230,30 @@ const features = () => {
                                                 </div>
                                                 <div className="app-store-btn">
                                                     <a className="store-btn" href="#">
-                                                        <img
-                                                            src="assets/images/cta-img/play-app.png"
+                                                        <Image
+                                                            src="/assets/images/cta-img/play-app.png"
                                                             alt="Play Store Button"
+                                                            width={157.29}
+                                                            height={54.99}
                                                         />
                                                     </a>
                                                     <a className="store-btn" href="#">
-                                                        <img
-                                                            src="assets/images/cta-img/apple-app.png"
+                                                        <Image
+                                                            src="/assets/images/cta-img/apple-app.png"
                                                             alt="Apple Store Button"
+                                                            width={157.29}
+                                                            height={54.99}
                                                         />
                                                     </a>
                                                 </div>
                                             </div>
                                             <div className="content-right">
                                                 <div className="img-right">
-                                                    <img
-                                                        src="assets/images/cta-img/view-img.png"
+                                                    <Image
+                                                        src="/assets/images/cta-img/view-img.png"
                                                         alt="Mobile View"
+                                                        width={450}
+                                                        height={500}
                                                     />
                                                 </div>
                                             </div>
