@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from 'next/navigation';
 
 const FileUpload = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const dropArea = document.getElementById("drop-area");
@@ -47,35 +49,14 @@ const FileUpload = () => {
 
   const handleFiles = (files) => {
     const filesArray = Array.from(files).map((file) => ({
+      file,
       id: `${file.name}-${file.size}-${Date.now()}`, // Unique ID for each file
       name: file.name,
-      size: (file.size / (1024 * 1024)).toFixed(2),
+      size: (file.size / (1024 * 1024)).toFixed(2), // Convert size to MB
       type: file.type || "Unknown",
-      progress: 0, // Initial progress set to 0
     }));
+
     setUploadedFiles((prevFiles) => [...prevFiles, ...filesArray]);
-
-    // Simulate file upload progress for each new file by its unique ID
-    filesArray.forEach((file) => simulateUploadProgress(file.id));
-  };
-
-  // Function to simulate upload progress
-  const simulateUploadProgress = (fileId) => {
-    const interval = setInterval(() => {
-      setUploadedFiles((prevFiles) => {
-        const updatedFiles = prevFiles.map((file) => {
-          if (file.id === fileId) {
-            if (file.progress < 100) {
-              return { ...file, progress: file.progress + 10 };
-            } else {
-              clearInterval(interval); // Stop interval when progress is 100%
-            }
-          }
-          return file;
-        });
-        return updatedFiles;
-      });
-    }, 500); // Adjust the interval speed as desired
   };
 
   const deleteFile = (fileIndex) => {
@@ -83,6 +64,46 @@ const FileUpload = () => {
       prevFiles.filter((_, index) => index !== fileIndex)
     );
   };
+
+  const handleUpload = async () => {
+    try {
+      const formData = new FormData();
+
+      // Append actual File objects for upload
+      uploadedFiles.forEach(({ file }) => {
+        formData.append("Files", file);
+      });
+
+      // Append email and password
+      formData.append("Email", email);
+      formData.append("Password", password);
+
+      const response = await fetch("https://localhost:7269/api/QuickShare/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Upload success:", data);
+
+        // Construct the download link in the required pattern
+        const shareLink = `http://localhost:3000/download/${data.shareLink}`;
+
+        // Save shareLink to sessionStorage
+        sessionStorage.setItem('shareLink', shareLink);
+
+        // Navigate to the link display page
+        router.push('/link');
+      } else {
+        const errorText = await response.text();
+        console.error("Upload failed:", errorText || response.statusText);
+      }
+    } catch (error) {
+      console.error("An error occurred during the upload:", error.message);
+    }
+  };
+
 
   return (
     <>
@@ -114,39 +135,19 @@ const FileUpload = () => {
               <div className="file-list">
                 {uploadedFiles.map((file, index) => (
                   <div className="file-item" key={file.id}>
-                    {file.progress < 100 ? (
-                      <div className="d-flex flex-column align-items-start">
-                        <span className="file-title">{file.name}</span>
-                        <div className="progress progress-light-bg w-100 my-2">
-                          <div
-                            className="progress-bar "
-                            role="progressbar"
-                            style={{ width: `${file.progress}%` }}
-                            aria-valuenow={file.progress}
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                          >
-                            {file.progress}%
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="d-flex align-items-center justify-content-between">
-                          <span className="file-title">{file.name}</span>
-                          <span
-                            className="delete-icon delete-file-btn"
-                            onClick={() => deleteFile(index)}
-                          >
-                            <i className="fa-solid fa-trash-can"></i>
-                          </span>
-                        </div>
-                        <div className="d-flex align-items-center justify-content-between mt-4">
-                          <span className="file-type">{file.type}</span>
-                          <span className="file-size">{file.size} MB</span>
-                        </div>
-                      </>
-                    )}
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span className="file-title">{file.name}</span>
+                      <span
+                        className="delete-icon delete-file-btn"
+                        onClick={() => deleteFile(index)}
+                      >
+                        <i className="fa-solid fa-trash-can"></i>
+                      </span>
+                    </div>
+                    <div className="d-flex align-items-center justify-content-between mt-4">
+                      <span className="file-type">{file.type}</span>
+                      <span className="file-size">{file.size} MB</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -185,14 +186,32 @@ const FileUpload = () => {
                   role="tabpanel"
                   aria-labelledby="get-link-tab"
                 >
-                  <form className="get-link-form">
+                  <form
+                    className="get-link-form"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleUpload();
+                    }}
+                  >
                     <label>Email</label>
                     <input
                       type="email"
                       placeholder="example@email.com"
                       className="input"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
-                    <a className="btn-default color-blacked">Get Link</a>
+                    <label>Password</label>
+                    <input
+                      type="password"
+                      placeholder="password"
+                      className="input"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button type="submit" className="btn-default color-blacked">
+                      Get Link
+                    </button>
                   </form>
                 </div>
                 <div

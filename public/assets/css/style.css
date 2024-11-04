@@ -12659,7 +12659,7 @@ xclip
 ======================*/
 .breadcarumb-style-1 {
   background-color: var(--color-blackest) !important;
-  background: url(../images/bg/breadcrumb-bg.png);
+  background: url('../images/bg/breadcrumb-bg.png');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: top center;
