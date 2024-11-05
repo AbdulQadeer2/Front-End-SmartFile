@@ -1,21 +1,20 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
 const DownloadFiles = () => {
-  const { token } = useParams(); // Get the token from the URL
+  const { token } = useParams();
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!token) return; // Ensure token is available before making the request
+    if (!token) return;
 
     const fetchFiles = async () => {
       try {
-        console.log(`Fetching files from URL: https://localhost:7269/share/${token}`);
         const response = await fetch(`https://localhost:7269/share/${token}`);
         if (!response.ok) throw new Error('Failed to fetch files');
-        
+
         const data = await response.json();
         setFiles(data.files);
       } catch (err) {
@@ -28,6 +27,27 @@ const DownloadFiles = () => {
 
   const formatFileSize = (size) => {
     return size >= 1024 ? `${(size / 1024).toFixed(2)} MB` : `${size} KB`;
+  };
+
+  const handleDownloadAll = async () => {
+    try {
+      const response = await fetch(`https://localhost:7269/share/${token}/download-all-files`, {
+        method: 'GET',
+      });
+      if (!response.ok) throw new Error('Failed to download files');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'AllFiles.zip';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Failed to download all files.');
+    }
   };
 
   return (
@@ -83,13 +103,12 @@ const DownloadFiles = () => {
                             ))}
                           </div>
                           <div className="d-flex align-items-center justify-content-center mt-4">
-                            <a
+                            <button
                               className="btn-default download-file-btn"
-                              href={`https://localhost:7269/files/${token}`}
-                              download
+                              onClick={handleDownloadAll}
                             >
                               <i className="fa fa-folder-download" /> Download All
-                            </a>
+                            </button>
                           </div>
                         </div>
                       </div>
