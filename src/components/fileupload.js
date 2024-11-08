@@ -3,18 +3,17 @@ import { useEffect, useState } from "react";
 
 const FileUpload = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
-
   const [totalSize, setTotalSize] = useState(0);
+  const [activeFeature, setActiveFeature] = useState("simple"); // Track active feature tab
 
-  // Calculate total size in MB whenever `uploadedFiles` changes
+  // Calculate total size in MB whenever uploadedFiles changes
   useEffect(() => {
-    const size = uploadedFiles.reduce((acc, file) => acc + (file.progress === 100 ? parseFloat(file.size) : 0), 0);
+    const size = uploadedFiles.reduce(
+      (acc, file) => acc + (file.progress === 100 ? parseFloat(file.size) : 0),
+      0
+    );
     setTotalSize(size.toFixed(2)); // Limit to 2 decimal places
   }, [uploadedFiles]);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
 
   useEffect(() => {
     const dropArea = document.getElementById("drop-area");
@@ -69,9 +68,6 @@ const FileUpload = () => {
     filesArray.forEach((file) => simulateUploadProgress(file.id));
   };
 
-
-  // Function to simulate upload progress
-
   const simulateUploadProgress = (fileId) => {
     const interval = setInterval(() => {
       setUploadedFiles((prevFiles) => {
@@ -81,9 +77,7 @@ const FileUpload = () => {
               return { ...file, progress: file.progress + 10 };
             } else {
               clearInterval(interval); // Stop interval when progress is 100%
-
               return { ...file, progress: 100 };
-
             }
           }
           return file;
@@ -97,6 +91,10 @@ const FileUpload = () => {
     setUploadedFiles((prevFiles) =>
       prevFiles.filter((_, index) => index !== fileIndex)
     );
+  };
+
+  const handleFeatureTabClick = (feature) => {
+    setActiveFeature(feature); // Change active feature
   };
 
   return (
@@ -134,11 +132,7 @@ const FileUpload = () => {
                         <span className="file-title">{file.name}</span>
                         <div className="progress progress-light-bg w-100 my-2">
                           <div
-
                             className="progress-bar"
-
-                            className="progress-bar "
-
                             role="progressbar"
                             style={{ width: `${file.progress}%` }}
                             aria-valuenow={file.progress}
@@ -160,11 +154,7 @@ const FileUpload = () => {
                             <i className="fa-solid fa-trash-can"></i>
                           </span>
                         </div>
-
-                        <div className="d-flex align-items-center justify-content-between mt-4 gap-3">
-
                         <div className="d-flex align-items-center justify-content-between mt-4">
-
                           <span className="file-type">{file.type}</span>
                           <span className="file-size">{file.size} MB</span>
                         </div>
@@ -173,7 +163,6 @@ const FileUpload = () => {
                   </div>
                 ))}
               </div>
-              {/* Display total size here */}
               <div className="total-size mt-4">
                 <strong>Total Size:</strong> {totalSize} MB
               </div>
@@ -219,6 +208,129 @@ const FileUpload = () => {
                       placeholder="example@email.com"
                       className="input"
                     />
+                    {/* Feature Tab Content */}
+                    <div className="feature-tab-content">
+                      {activeFeature === "simple" && <p>Simple Options</p>}
+                      {activeFeature === "add-password" && (
+                        <div>
+                          <label>Password</label>
+                          <input
+                            type="password"
+                            placeholder="Enter password"
+                            className="input"
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "notifications" && (
+                        <div>
+                          <label>Notification Preferences</label>
+                          <input type="checkbox" /> Enable Notifications
+                        </div>
+                      )}
+                      {activeFeature === "schedule-sharing" && (
+                        <div>
+                          <label>Schedule Sharing</label>
+                          <input type="datetime-local" className="input " />
+                        </div>
+                      )}
+                      {activeFeature === "download-limit" && (
+                        <div>
+                          <label>Download Limit</label>
+                          <input
+                            type="number"
+                            placeholder="Set limit"
+                            className="input"
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "encrypted-sharing" && (
+                        <div>
+                          <label>Enable Encrypted Sharing</label>
+                          <input type="checkbox" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Feature Tabs */}
+                    <div className="feature-tabs mt-3">
+                      <ul className="nav nav-pills right-area-nav gap-4 flex-nowrap">
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "simple" ? "active" : ""
+                            }`}
+                            onClick={() => handleFeatureTabClick("simple")}
+                          >
+                            <i className="fa-solid fa-rectangle-xmark"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "add-password" ? "active" : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("add-password")
+                            }
+                          >
+                            <i className="fa fa-lock"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "notifications" ? "active" : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("notifications")
+                            }
+                          >
+                            <i className="fa fa-bell"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "schedule-sharing"
+                                ? "active"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("schedule-sharing")
+                            }
+                          >
+                            <i className="fa fa-calendar"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "download-limit" ? "active" : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("download-limit")
+                            }
+                          >
+                            <i className="fa fa-download"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "encrypted-sharing"
+                                ? "active"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("encrypted-sharing")
+                            }
+                          >
+                            <i className="fa fa-shield-alt"></i>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+
                     <a className="btn-default color-blacked">Get Link</a>
                   </form>
                 </div>
@@ -252,6 +364,130 @@ const FileUpload = () => {
                       placeholder="Your Message Here..."
                       className="input"
                     ></textarea>
+
+                    {/* Feature Tab Content */}
+                    <div className="feature-tab-content">
+                      {activeFeature === "simple" && <p>Simple Options</p>}
+                      {activeFeature === "add-password" && (
+                        <div>
+                          <label>Password</label>
+                          <input
+                            type="password"
+                            placeholder="Enter password"
+                            className="input"
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "notifications" && (
+                        <div>
+                          <label>Notification Preferences</label>
+                          <input type="checkbox" /> Enable Notifications
+                        </div>
+                      )}
+                      {activeFeature === "schedule-sharing" && (
+                        <div>
+                          <label>Schedule Sharing</label>
+                          <input type="datetime-local" className="input" />
+                        </div>
+                      )}
+                      {activeFeature === "download-limit" && (
+                        <div>
+                          <label>Download Limit</label>
+                          <input
+                            type="number"
+                            placeholder="Set limit"
+                            className="input"
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "encrypted-sharing" && (
+                        <div>
+                          <label>Enable Encrypted Sharing</label>
+                          <input type="checkbox" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Feature Tabs */}
+                    <div className="feature-tabs mt-3">
+                      <ul className="nav nav-pills right-area-nav gap-4 flex-nowrap">
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "simple" ? "active" : ""
+                            }`}
+                            onClick={() => handleFeatureTabClick("simple")}
+                          >
+                            <i className="fa-solid fa-rectangle-xmark"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "add-password" ? "active" : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("add-password")
+                            }
+                          >
+                            <i className="fa fa-lock"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "notifications" ? "active" : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("notifications")
+                            }
+                          >
+                            <i className="fa fa-bell"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "schedule-sharing"
+                                ? "active"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("schedule-sharing")
+                            }
+                          >
+                            <i className="fa fa-calendar"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "download-limit" ? "active" : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("download-limit")
+                            }
+                          >
+                            <i className="fa fa-download"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${
+                              activeFeature === "encrypted-sharing"
+                                ? "active"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              handleFeatureTabClick("encrypted-sharing")
+                            }
+                          >
+                            <i className="fa fa-shield-alt"></i>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+
                     <a className="btn-default color-blacked">Send Email</a>
                   </form>
                 </div>

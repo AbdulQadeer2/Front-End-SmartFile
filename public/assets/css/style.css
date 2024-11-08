@@ -23024,6 +23024,42 @@ iframe {
   font-weight: 300;
 }
 
+.right-area-nav {
+  background: #ffffff0d;
+  border-radius: 6px;
+  padding: 0px 12px;
+}
+
+.right-area-nav .nav-link {
+  color: var(--color-primary);
+}
+
+.right-area-nav .nav-link.active {
+  color: #fff;
+  background-color: var(--color-primary);
+}
+
+.right-area-nav .nav-link:focus, .right-area-nav .nav-link:hover {
+  color: var(--color-light);
+}
+
+.get-link-form .date-input {
+  padding: 9px 10px;
+}
+
+.pass-eye span {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  cursor: pointer;
+  z-index: 2;
+  transform: translateY(-50%);
+  color: #919191;
+}
+.pass-eye {
+  position: relative;
+}
+
 @media only screen and (max-width: 1200px) {
   .upload-file-and-tab {
     flex-direction: column-reverse;
