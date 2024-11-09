@@ -1,12 +1,54 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import * as signalR from "@microsoft/signalr";
+
+// Progress Overlay Component
+const ProgressOverlay = ({ fileProgress, onClose }) => (
+  <div className="progress-overlay">
+    <div className="progress-overlay-content">
+      <h3>Uploading Files...</h3>
+      {fileProgress.map((file) => (
+        <div key={file.fileName} className="file-progress">
+          <span className="file-name">{file.fileName}</span>
+          <div className="progress-bar">
+            <div
+              className="progress-fill"
+              style={{ width: `${file.progressPercentage}%` }}
+            ></div>
+          </div>
+          <span className="progress-text">
+            {file.progressPercentage.toFixed(2)}%
+          </span>
+        </div>
+      ))}
+      <button onClick={onClose} className="close-button">Close</button>
+    </div>
+  </div>
+);
+
 
 const FileUpload = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [totalSize, setTotalSize] = useState(0);
+  const [activeFeature, setActiveFeature] = useState("simple"); // Track active feature tab
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [connectionId, setConnectionId] = useState("");
+  const [fileProgress, setFileProgress] = useState([]); // To hold progress for each file
+  const [showProgressOverlay, setShowProgressOverlay] = useState(false); // State for overlay
   const router = useRouter();
+
+  // Calculate total size in MB whenever uploadedFiles changes
+  useEffect(() => {
+    const size = uploadedFiles.reduce(
+      (acc, file) => acc + (file.progress === 100 ? parseFloat(file.size) : 0),
+      0
+    );
+    setTotalSize(size.toFixed(2)); // Limit to 2 decimal places
+  }, [uploadedFiles]);
 
   useEffect(() => {
     const dropArea = document.getElementById("drop-area");
@@ -19,6 +61,39 @@ const FileUpload = () => {
       dropArea.removeEventListener("dragover", handleDragOver);
       dropArea.removeEventListener("dragleave", handleDragLeave);
       dropArea.removeEventListener("drop", handleDrop);
+    };
+  }, []);
+
+  useEffect(() => {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl("https://localhost:7269/fileUploadHub")
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on("ReceiveProgress", (progress) => {
+      console.log("Received progress update:", progress);
+      setFileProgress((prevProgress) => {
+        const updatedProgress = prevProgress.map(file =>
+          file.fileName === progress.fileName
+            ? { ...file, ...progress }
+            : file
+        );
+        if (!updatedProgress.some(file => file.fileName === progress.fileName)) {
+          updatedProgress.push(progress);
+        }
+        return updatedProgress;
+      });
+    });
+
+    connection.start()
+      .then(() => {
+        console.log("SignalR Connected");
+        setConnectionId(connection.connectionId);
+      })
+      .catch(err => console.error("SignalR Connection Error: ", err));
+
+    return () => {
+      connection.stop();
     };
   }, []);
 
@@ -52,11 +127,36 @@ const FileUpload = () => {
       file,
       id: `${file.name}-${file.size}-${Date.now()}`, // Unique ID for each file
       name: file.name,
-      size: (file.size / (1024 * 1024)).toFixed(2), // Convert size to MB
+      size: (file.size / (1024 * 1024)).toFixed(2), // File size in MB with 2 decimal places
       type: file.type || "Unknown",
+      progress: 0, // Initial progress set to 0
+      uploadedBytes: 0,
+      totalBytes: file.size,
+      progressPercentage: 0,
     }));
-
     setUploadedFiles((prevFiles) => [...prevFiles, ...filesArray]);
+
+    // Simulate file upload progress for each new file by its unique ID
+    filesArray.forEach((file) => simulateUploadProgress(file.id));
+  };
+
+  const simulateUploadProgress = (fileId) => {
+    const interval = setInterval(() => {
+      setUploadedFiles((prevFiles) => {
+        const updatedFiles = prevFiles.map((file) => {
+          if (file.id === fileId) {
+            if (file.progress < 100) {
+              return { ...file, progress: file.progress + 10 };
+            } else {
+              clearInterval(interval); // Stop interval when progress is 100%
+              return { ...file, progress: 100 };
+            }
+          }
+          return file;
+        });
+        return updatedFiles;
+      });
+    }, 500); // Adjust the interval speed as desired
   };
 
   const deleteFile = (fileIndex) => {
@@ -65,18 +165,24 @@ const FileUpload = () => {
     );
   };
 
+  const handleFeatureTabClick = (feature) => {
+    setActiveFeature(feature); // Change active feature
+  };
+
   const handleUpload = async () => {
     try {
-      const formData = new FormData();
+      setUploading(true);
+      setShowProgressOverlay(true); // Show overlay
+      setUploadProgress(0);
 
-      // Append actual File objects for upload
+      const formData = new FormData();
       uploadedFiles.forEach(({ file }) => {
         formData.append("Files", file);
       });
 
-      // Append email and password
       formData.append("Email", email);
       formData.append("Password", password);
+      formData.append("ConnectionId", connectionId);
 
       const response = await fetch("https://localhost:7269/api/QuickShare/upload", {
         method: "POST",
@@ -85,28 +191,29 @@ const FileUpload = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Upload success:", data);
-
-        // Construct the download link in the required pattern
         const shareLink = `http://localhost:3000/download/${data.shareLink}`;
-
-        // Save shareLink to sessionStorage
-        sessionStorage.setItem('shareLink', shareLink);
-
-        // Navigate to the link display page
-        router.push('/link');
+        sessionStorage.setItem("shareLink", shareLink);
+        router.push("/link");
       } else {
         const errorText = await response.text();
         console.error("Upload failed:", errorText || response.statusText);
       }
     } catch (error) {
       console.error("An error occurred during the upload:", error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
+  const closeProgressOverlay = () => {
+    setShowProgressOverlay(false);
+  };
 
   return (
     <>
+      {showProgressOverlay && (
+        <ProgressOverlay fileProgress={fileProgress} onClose={closeProgressOverlay} />
+      )}
       {!uploadedFiles.length ? (
         <div className="drop-area" id="drop-area" onClick={openFileDialog}>
           <h3 className="drop-title">Upload file</h3>
@@ -135,21 +242,44 @@ const FileUpload = () => {
               <div className="file-list">
                 {uploadedFiles.map((file, index) => (
                   <div className="file-item" key={file.id}>
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span className="file-title">{file.name}</span>
-                      <span
-                        className="delete-icon delete-file-btn"
-                        onClick={() => deleteFile(index)}
-                      >
-                        <i className="fa-solid fa-trash-can"></i>
-                      </span>
-                    </div>
-                    <div className="d-flex align-items-center justify-content-between mt-4">
-                      <span className="file-type">{file.type}</span>
-                      <span className="file-size">{file.size} MB</span>
-                    </div>
+                    {file.progress < 100 ? (
+                      <div className="d-flex flex-column align-items-start">
+                        <span className="file-title">{file.name}</span>
+                        <div className="progress progress-light-bg w-100 my-2">
+                          <div
+                            className="progress-bar"
+                            role="progressbar"
+                            style={{ width: `${file.progress}%` }}
+                            aria-valuenow={file.progress}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          >
+                            {file.progress}%
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="d-flex align-items-center justify-content-between">
+                          <span className="file-title">{file.name}</span>
+                          <span
+                            className="delete-icon delete-file-btn"
+                            onClick={() => deleteFile(index)}
+                          >
+                            <i className="fa-solid fa-trash-can"></i>
+                          </span>
+                        </div>
+                        <div className="d-flex align-items-center justify-content-between mt-4">
+                          <span className="file-type">{file.type}</span>
+                          <span className="file-size">{file.size} MB</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
+              </div>
+              <div className="total-size mt-4">
+                <strong>Total Size:</strong> {totalSize} MB
               </div>
             </div>
             <div className="right-area" id="right-area">
@@ -186,8 +316,7 @@ const FileUpload = () => {
                   role="tabpanel"
                   aria-labelledby="get-link-tab"
                 >
-                  <form
-                    className="get-link-form"
+                  <form className="get-link-form"
                     onSubmit={(e) => {
                       e.preventDefault();
                       handleUpload();
@@ -201,17 +330,128 @@ const FileUpload = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
-                    <label>Password</label>
-                    <input
-                      type="password"
-                      placeholder="password"
-                      className="input"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <button type="submit" className="btn-default color-blacked">
-                      Get Link
-                    </button>
+                    {/* Feature Tab Content */}
+                    <div className="feature-tab-content">
+                      {activeFeature === "simple" && <p>Simple Options</p>}
+                      {activeFeature === "add-password" && (
+                        <div>
+                          <label>Password</label>
+                          <input
+                            type="password"
+                            placeholder="Enter password"
+                            className="input"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "notifications" && (
+                        <div>
+                          <label>Notification Preferences</label>
+                          <input type="checkbox" /> Enable Notifications
+                        </div>
+                      )}
+                      {activeFeature === "schedule-sharing" && (
+                        <div>
+                          <label>Schedule Sharing</label>
+                          <input type="datetime-local" className="input " />
+                        </div>
+                      )}
+                      {activeFeature === "download-limit" && (
+                        <div>
+                          <label>Download Limit</label>
+                          <input
+                            type="number"
+                            placeholder="Set limit"
+                            className="input"
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "encrypted-sharing" && (
+                        <div>
+                          <label>Enable Encrypted Sharing</label>
+                          <input type="checkbox" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Feature Tabs */}
+                    <div className="feature-tabs mt-3">
+                      <ul className="nav nav-pills right-area-nav gap-4 flex-nowrap">
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "simple" ? "active" : ""
+                              }`}
+                            onClick={() => handleFeatureTabClick("simple")}
+                          >
+                            <i className="fa-solid fa-rectangle-xmark"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "add-password" ? "active" : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("add-password")
+                            }
+                          >
+                            <i className="fa fa-lock"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "notifications" ? "active" : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("notifications")
+                            }
+                          >
+                            <i className="fa fa-bell"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "schedule-sharing"
+                              ? "active"
+                              : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("schedule-sharing")
+                            }
+                          >
+                            <i className="fa fa-calendar"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "download-limit" ? "active" : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("download-limit")
+                            }
+                          >
+                            <i className="fa fa-download"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "encrypted-sharing"
+                              ? "active"
+                              : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("encrypted-sharing")
+                            }
+                          >
+                            <i className="fa fa-shield-alt"></i>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <button className="btn-default color-blacked"
+                      type="submit"
+                      disabled={uploading}> {uploading ? "Uploading..." : "Get Link"}</button>
                   </form>
                 </div>
                 <div
@@ -244,6 +484,124 @@ const FileUpload = () => {
                       placeholder="Your Message Here..."
                       className="input"
                     ></textarea>
+
+                    {/* Feature Tab Content */}
+                    <div className="feature-tab-content">
+                      {activeFeature === "simple" && <p>Simple Options</p>}
+                      {activeFeature === "add-password" && (
+                        <div>
+                          <label>Password</label>
+                          <input
+                            type="password"
+                            placeholder="Enter password"
+                            className="input"
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "notifications" && (
+                        <div>
+                          <label>Notification Preferences</label>
+                          <input type="checkbox" /> Enable Notifications
+                        </div>
+                      )}
+                      {activeFeature === "schedule-sharing" && (
+                        <div>
+                          <label>Schedule Sharing</label>
+                          <input type="datetime-local" className="input" />
+                        </div>
+                      )}
+                      {activeFeature === "download-limit" && (
+                        <div>
+                          <label>Download Limit</label>
+                          <input
+                            type="number"
+                            placeholder="Set limit"
+                            className="input"
+                          />
+                        </div>
+                      )}
+                      {activeFeature === "encrypted-sharing" && (
+                        <div>
+                          <label>Enable Encrypted Sharing</label>
+                          <input type="checkbox" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Feature Tabs */}
+                    <div className="feature-tabs mt-3">
+                      <ul className="nav nav-pills right-area-nav gap-4 flex-nowrap">
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "simple" ? "active" : ""
+                              }`}
+                            onClick={() => handleFeatureTabClick("simple")}
+                          >
+                            <i className="fa-solid fa-rectangle-xmark"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "add-password" ? "active" : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("add-password")
+                            }
+                          >
+                            <i className="fa fa-lock"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "notifications" ? "active" : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("notifications")
+                            }
+                          >
+                            <i className="fa fa-bell"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "schedule-sharing"
+                              ? "active"
+                              : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("schedule-sharing")
+                            }
+                          >
+                            <i className="fa fa-calendar"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "download-limit" ? "active" : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("download-limit")
+                            }
+                          >
+                            <i className="fa fa-download"></i>
+                          </a>
+                        </li>
+                        <li className="nav-item">
+                          <a
+                            className={`nav-link feature-tab ${activeFeature === "encrypted-sharing"
+                              ? "active"
+                              : ""
+                              }`}
+                            onClick={() =>
+                              handleFeatureTabClick("encrypted-sharing")
+                            }
+                          >
+                            <i className="fa fa-shield-alt"></i>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+
                     <a className="btn-default color-blacked">Send Email</a>
                   </form>
                 </div>

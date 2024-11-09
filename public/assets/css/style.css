@@ -9984,10 +9984,12 @@ textarea:-ms-input-placeholder {
   animation: spin 1s linear infinite;
   margin: 0 auto;
 }
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -12659,7 +12661,7 @@ xclip
 ======================*/
 .breadcarumb-style-1 {
   background-color: var(--color-blackest) !important;
-  background: url('../images/bg/breadcrumb-bg.png');
+  background: url(../images/bg/breadcrumb-bg.png);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: top center;
@@ -22928,7 +22930,7 @@ iframe {
 
 .left-area .file-list {
   margin-top: 6px;
-  max-height: 282px;
+  max-height: 242px;
   overflow-y: auto;
   border-radius: 6px;
 }
@@ -23022,29 +23024,85 @@ iframe {
   font-weight: 300;
 }
 
+.right-area-nav {
+  background: #ffffff0d;
+  border-radius: 6px;
+  padding: 0px 12px;
+}
+
+.right-area-nav .nav-link {
+  color: var(--color-primary);
+}
+
+.right-area-nav .nav-link.active {
+  color: #fff;
+  background-color: var(--color-primary);
+}
+
+.right-area-nav .nav-link:focus, .right-area-nav .nav-link:hover {
+  color: var(--color-light);
+}
+
+.get-link-form .date-input {
+  padding: 9px 10px;
+}
+
+.pass-eye span {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  cursor: pointer;
+  z-index: 2;
+  transform: translateY(-50%);
+  color: #919191;
+}
+.pass-eye {
+  position: relative;
+}
+
 @media only screen and (max-width: 1200px) {
   .upload-file-and-tab {
     flex-direction: column-reverse;
   }
+
+
   .upload-file-and-tab .left-area {
     width: 100%;
   }
+
+
+  .upload-file-and-tab .left-area {
+    width: 100%;
+  }
+
   .left-area #left-drop-zone {
     display: flex;
     flex-direction: row-reverse;
     justify-content: flex-end;
     align-items: center;
+
+    .drop-content {
+      margin-left: 10px;
+    }
+
+    .drop-title {
+      text-align: left;
+    }
+
+
     .drop-content {
       margin-left: 10px;
     }
     .drop-title {
       text-align: left;
     }
+
     .drop-text {
       margin: 0;
       text-align: left;
     }
   }
+
   .upload-file-and-tab .right-area {
     width: 100%;
     margin-bottom: 20px;
@@ -26663,4 +26721,98 @@ body.active-light-mode
   }
 }
 
-/*# sourceMappingURL=../maps/style.css.map */
+
+/* CopyLink Thank-you Page */
+.copyfilelink-btn {
+  padding: 0px !important;
+}
+
+@media only screen and (max-width: 576px) {
+  .copy-link {
+    flex-direction: column;
+  }
+
+  .copy-link>div {
+    width: 100%;
+  }
+
+  .copy-link div {
+    width: 100% !important;
+    margin-bottom: 10px !important;
+  }
+
+  .copy-link div a {
+    margin-left: 0px !important;
+  }
+}
+
+/* Download Files Page */
+.download-file-item {
+  background-color: #6c628c23;
+  padding: 15px;
+  margin: 6px 0;
+  border-radius: 6px;
+}
+
+
+
+
+/* pop up */
+
+
+.progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.progress-overlay-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 100%;
+}
+
+.file-progress {
+  margin: 10px 0;
+}
+
+.file-name {
+  display: block;
+  font-weight: bold;
+}
+
+.progress-bar {
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 5px 0;
+}
+
+.progress-fill {
+  background: #4caf50;
+  height: 10px;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+}
+
+.close-button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
