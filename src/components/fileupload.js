@@ -40,6 +40,10 @@ const FileUpload = () => {
   const [fileProgress, setFileProgress] = useState([]); // To hold progress for each file
   const [showProgressOverlay, setShowProgressOverlay] = useState(false); // State for overlay
   const router = useRouter();
+  const [recipientEmail, setRecipientEmail] = useState(""); // Add recipientEmail state
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
 
   // Calculate total size in MB whenever uploadedFiles changes
   useEffect(() => {
@@ -66,7 +70,7 @@ const FileUpload = () => {
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("https://localhost:7269/fileUploadHub")
+      .withUrl("https://smartfilepresentation20241116235142.azurewebsites.net/fileUploadHub")
       .withAutomaticReconnect()
       .build();
 
@@ -169,7 +173,7 @@ const FileUpload = () => {
     setActiveFeature(feature); // Change active feature
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (formType) => {
     try {
       setUploading(true);
       setShowProgressOverlay(true); // Show overlay
@@ -180,11 +184,22 @@ const FileUpload = () => {
         formData.append("Files", file);
       });
 
+      // Append common fields
       formData.append("Email", email);
-      formData.append("Password", password);
       formData.append("ConnectionId", connectionId);
+      formData.append("Mode", formType === "getLink" ? "Get Link" : "Send File"); // New Mode field
 
-      const response = await fetch("https://localhost:7269/api/QuickShare/upload", {
+      // Append fields based on form type
+      if (formType === "getLink") {
+        formData.append("Password", password);
+      } else if (formType === "sendFile") {
+        formData.append("RecipientEmail", recipientEmail);
+        formData.append("Subject", subject);
+        formData.append("Message", message);
+        formData.append("Password", password);
+      }
+
+      const response = await fetch("https://smartfilepresentation20241116235142.azurewebsites.net/api/QuickShare/upload", {
         method: "POST",
         body: formData,
       });
@@ -203,6 +218,17 @@ const FileUpload = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  // On form submission, pass the type of the form as a parameter
+  const handleGetLinkFormSubmit = (e) => {
+    e.preventDefault();
+    handleUpload("getLink");
+  };
+
+  const handleSendFileFormSubmit = (e) => {
+    e.preventDefault();
+    handleUpload("sendFile");
   };
 
   const closeProgressOverlay = () => {
@@ -316,12 +342,8 @@ const FileUpload = () => {
                   role="tabpanel"
                   aria-labelledby="get-link-tab"
                 >
-                  <form className="get-link-form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleUpload();
-                    }}
-                  >
+                  <form className="get-link-form" onSubmit={handleGetLinkFormSubmit}>
+                    {/* Get Link form fields */}
                     <label>Email</label>
                     <input
                       type="email"
@@ -448,10 +470,9 @@ const FileUpload = () => {
                         </li>
                       </ul>
                     </div>
-
-                    <button className="btn-default color-blacked"
-                      type="submit"
-                      disabled={uploading}> {uploading ? "Uploading..." : "Get Link"}</button>
+                    <button type="submit" disabled={uploading}>
+                      {uploading ? "Uploading..." : "Get Link"}
+                    </button>
                   </form>
                 </div>
                 <div
@@ -460,29 +481,38 @@ const FileUpload = () => {
                   role="tabpanel"
                   aria-labelledby="send-file-tab"
                 >
-                  <form className="send-file-form">
-                    <label>Email</label>
+                  <form className="send-file-form" onSubmit={handleSendFileFormSubmit}>
+                    {/* Send File form fields */}
                     <input
                       type="email"
                       placeholder="example@email.com"
                       className="input"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                     <label>Recipient Email</label>
                     <input
                       type="email"
                       placeholder="Recipient Email"
                       className="input"
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)} // Update recipientEmail state
                     />
                     <label>Subject</label>
                     <input
                       type="text"
                       placeholder="Subject"
                       className="input"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
                     />
+
                     <label>Message</label>
                     <textarea
                       placeholder="Your Message Here..."
                       className="input"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
                     ></textarea>
 
                     {/* Feature Tab Content */}
@@ -495,6 +525,8 @@ const FileUpload = () => {
                             type="password"
                             placeholder="Enter password"
                             className="input"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                           />
                         </div>
                       )}
@@ -602,13 +634,15 @@ const FileUpload = () => {
                       </ul>
                     </div>
 
-                    <a className="btn-default color-blacked">Send Email</a>
+                    <button type="submit" disabled={uploading}>
+                      {uploading ? "Uploading..." : "Send Email"}
+                    </button>
                   </form>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </div >
       )}
     </>
   );
