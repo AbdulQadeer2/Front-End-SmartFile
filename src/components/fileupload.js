@@ -70,10 +70,13 @@ const FileUpload = () => {
 
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("https://smartfilepresentation20241116235142.azurewebsites.net/fileUploadHub")
+      .withUrl("https://smartfilepresentation.azurewebsites.net/fileUploadHub", {
+        transport: signalR.HttpTransportType.WebSockets, // Force WebSockets
+      })
       .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Information) // Enable detailed logging
       .build();
-
+  
     connection.on("ReceiveProgress", (progress) => {
       console.log("Received progress update:", progress);
       setFileProgress((prevProgress) => {
@@ -88,14 +91,14 @@ const FileUpload = () => {
         return updatedProgress;
       });
     });
-
+  
     connection.start()
       .then(() => {
         console.log("SignalR Connected");
         setConnectionId(connection.connectionId);
       })
       .catch(err => console.error("SignalR Connection Error: ", err));
-
+  
     return () => {
       connection.stop();
     };
@@ -199,7 +202,7 @@ const FileUpload = () => {
         formData.append("Password", password);
       }
 
-      const response = await fetch("https://smartfilepresentation20241116235142.azurewebsites.net/api/QuickShare/upload", {
+      const response = await fetch("https://smartfilepresentation.azurewebsites.net/api/QuickShare/upload", {
         method: "POST",
         body: formData,
       });
@@ -470,7 +473,7 @@ const FileUpload = () => {
                         </li>
                       </ul>
                     </div>
-                    <button type="submit" disabled={uploading}>
+                    <button className="btn-default color-blacked" type="submit" disabled={uploading}>
                       {uploading ? "Uploading..." : "Get Link"}
                     </button>
                   </form>
@@ -634,7 +637,7 @@ const FileUpload = () => {
                       </ul>
                     </div>
 
-                    <button type="submit" disabled={uploading}>
+                    <button className="btn-default color-blacked" type="submit" disabled={uploading}>
                       {uploading ? "Uploading..." : "Send Email"}
                     </button>
                   </form>

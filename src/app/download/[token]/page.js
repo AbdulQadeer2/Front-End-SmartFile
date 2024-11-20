@@ -21,7 +21,7 @@ const DownloadFiles = () => {
 
     const fetchFiles = async () => {
       try {
-        const response = await fetch(`https://smartfilepresentation20241116235142.azurewebsites.net/share/${token}`);
+        const response = await fetch(`https://localhost:7269/share/${token}`);
         if (response.status === 401) {
           setPasswordRequired(true);
           return;
@@ -42,7 +42,7 @@ const DownloadFiles = () => {
   const handlePasswordSubmit = async () => {
     try {
       const response = await fetch(
-        `https://smartfilepresentation20241116235142.azurewebsites.net/share/${token}?password=${encodeURIComponent(password)}`
+        `https://localhost:7269/share/${token}?password=${encodeURIComponent(password)}`
       );
 
       if (response.status === 401) {
@@ -64,7 +64,7 @@ const DownloadFiles = () => {
     try {
       // Establish SignalR connection
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl("https://smartfilepresentation20241116235142.azurewebsites.net/fileUploadHub")
+        .withUrl("https://localhost:7269/fileUploadHub")
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
@@ -79,7 +79,7 @@ const DownloadFiles = () => {
 
       // Request download with connection ID for real-time updates
       const response = await fetch(
-        `https://smartfilepresentation20241116235142.azurewebsites.net/share/${token}/download-all-files?connectionId=${connection.connectionId}`,
+        `https://localhost:7269/share/${token}/download-all-files?connectionId=${connection.connectionId}`,
         { method: 'GET' }
       );
       if (!response.ok) throw new Error('Failed to download files');
