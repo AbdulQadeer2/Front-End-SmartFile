@@ -68,41 +68,96 @@ const FileUpload = () => {
     };
   }, []);
 
+  // useEffect(() => {
+  //   const connection = new signalR.HubConnectionBuilder()
+  //     .withUrl("https://smartfilepresentation.azurewebsites.net/fileUploadHub", {
+  //       transport: signalR.HttpTransportType.WebSockets, // Force WebSockets
+  //     })
+  //     .withAutomaticReconnect()
+  //     .configureLogging(signalR.LogLevel.Information) // Enable detailed logging
+  //     .build();
+  
+  //   connection.on("ReceiveProgress", (progress) => {
+  //     console.log("Received progress update:", progress);
+  //     setFileProgress((prevProgress) => {
+  //       const updatedProgress = prevProgress.map(file =>
+  //         file.fileName === progress.fileName
+  //           ? { ...file, ...progress }
+  //           : file
+  //       );
+  //       if (!updatedProgress.some(file => file.fileName === progress.fileName)) {
+  //         updatedProgress.push(progress);
+  //       }
+  //       return updatedProgress;
+  //     });
+  //   });
+  
+  //   connection.start()
+  //     .then(() => {
+  //       console.log("SignalR Connected");
+  //       setConnectionId(connection.connectionId);
+  //     })
+  //     .catch(err => console.error("SignalR Connection Error: ", err));
+  
+  //   return () => {
+  //     connection.stop();
+  //   };
+  // }, []);
+
   useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
       .withUrl("https://smartfilepresentation.azurewebsites.net/fileUploadHub", {
-        transport: signalR.HttpTransportType.WebSockets, // Force WebSockets
+        transport: signalR.HttpTransportType.WebSockets, // Use WebSockets for faster updates
       })
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.Information) // Enable detailed logging
+      .withAutomaticReconnect() // Automatically reconnect if disconnected
+      .configureLogging(signalR.LogLevel.Information) // Enable logging for debugging
       .build();
   
+    let isMounted = true; // Flag to track if the component is mounted
+  
+    // Handle progress updates from the server
     connection.on("ReceiveProgress", (progress) => {
       console.log("Received progress update:", progress);
-      setFileProgress((prevProgress) => {
-        const updatedProgress = prevProgress.map(file =>
-          file.fileName === progress.fileName
-            ? { ...file, ...progress }
-            : file
-        );
-        if (!updatedProgress.some(file => file.fileName === progress.fileName)) {
-          updatedProgress.push(progress);
-        }
-        return updatedProgress;
-      });
+  
+      if (isMounted) {
+        setFileProgress((prevProgress) => {
+          // Check if the file exists; update it if found, otherwise add it
+          const fileExists = prevProgress.some(file => file.fileName === progress.fileName);
+  
+          if (fileExists) {
+            // Update the existing file progress
+            return prevProgress.map(file =>
+              file.fileName === progress.fileName
+                ? { ...file, ...progress } // Merge new progress data
+                : file
+            );
+          } else {
+            // Add new progress for files not yet in the list
+            return [...prevProgress, progress];
+          }
+        });
+      }
     });
   
+    // Start the SignalR connection
     connection.start()
       .then(() => {
         console.log("SignalR Connected");
-        setConnectionId(connection.connectionId);
+        if (isMounted) {
+          setConnectionId(connection.connectionId); // Save connection ID
+        }
       })
-      .catch(err => console.error("SignalR Connection Error: ", err));
+      .catch((err) => {
+        console.error("SignalR Connection Error:", err);
+      });
   
+    // Cleanup on component unmount
     return () => {
-      connection.stop();
+      isMounted = false;
+      connection.stop().then(() => console.log("SignalR Disconnected"));
     };
   }, []);
+  
 
   const handleDragOver = (e) => {
     e.preventDefault();
